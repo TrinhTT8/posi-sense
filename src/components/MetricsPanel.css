@@ -1,0 +1,11 @@
+.metrics-panel {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 1200px) {
+  .metrics-panel {
+    grid-template-columns: 1fr 1fr;
+  }
+}

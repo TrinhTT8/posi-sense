@@ -1,0 +1,134 @@
+.metric-card {
+  background: var(--color-surface);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: border-color 0.3s;
+}
+
+.metric-card--good {
+  border-color: rgba(0, 184, 148, 0.35);
+}
+
+.metric-card--warn {
+  border-color: rgba(253, 203, 110, 0.35);
+}
+
+.metric-card--bad {
+  border-color: rgba(214, 48, 49, 0.35);
+}
+
+/* Header */
+.metric-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.metric-card__icon {
+  font-size: 1.25rem;
+}
+
+.metric-card__label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Gauge row */
+.metric-card__gauge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.metric-card__ring {
+  width: 62px;
+  height: 62px;
+  flex-shrink: 0;
+}
+
+.metric-card__ring-bg {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.metric-card__ring-fill {
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.metric-card__ring-fill--good {
+  stroke: var(--color-success);
+}
+
+.metric-card__ring-fill--warn {
+  stroke: var(--color-warning);
+}
+
+.metric-card__ring-fill--bad {
+  stroke: var(--color-danger);
+}
+
+/* Score */
+.metric-card__score-box {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.metric-card__score {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.metric-card__score--good {
+  color: var(--color-success);
+}
+
+.metric-card__score--warn {
+  color: var(--color-warning);
+}
+
+.metric-card__score--bad {
+  color: var(--color-danger);
+}
+
+.metric-card__score-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* Extra info (e.g. WPM) */
+.metric-card__extra {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Issues */
+.metric-card__issues {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.metric-card__issue {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  padding-left: 1rem;
+  position: relative;
+  line-height: 1.4;
+}
+
+.metric-card__issue::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--color-accent-light);
+}
