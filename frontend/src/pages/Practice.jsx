@@ -23,12 +23,7 @@ export default function Practice() {
 
   const question = selectedQuestion;
 
-  useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!user) {
-      navigate("/login");
-    }
-  }, [user, navigate]);
+  // Removed redirect to login on reload if user is not present
 
   useEffect(() => {
     // Request camera access
@@ -188,11 +183,24 @@ export default function Practice() {
 
   return (
     <div 
-      className="min-h-screen flex flex-col transition-all duration-[400ms] ease-in-out"
+      className="min-h-screen flex flex-col transition-all duration-[400ms] ease-in-out relative"
       style={{
         backgroundColor: isTrainingMode ? "#F8FAFC" : "#EEF2F6"
       }}
     >
+      {/* Focus Mode Overlay */}
+      {isPracticing && !isTrainingMode && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(30, 41, 59, 0.45)',
+          zIndex: 100,
+          pointerEvents: 'none',
+        }} />
+      )}
       {/* Minimal Top Bar */}
       <header className="px-12 py-6 flex items-center justify-between">
         <h1 className="text-[#0F172A] logo-font text-xl">PosiSense</h1>

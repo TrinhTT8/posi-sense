@@ -1,194 +1,262 @@
-import { useNavigate } from "react-router";
-import { Trophy, TrendingUp } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
-import { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import CircularScoreBar from "../components/analytics/CircularScoreBar";
+import MetricCard from "../components/analytics/MetricCard";
+import SessionTimeline from "../components/analytics/SessionTimeline";
+import ProgressChart from "../components/analytics/ProgressChart";
+import ScoreCelebration from "../components/ScoreCelebration";
+// import { generateMockSession, generateMultipleSessions } from "../mockData";
+import { THRESHOLDS, getThresholdStatus } from "../thresholds";
 
-export default function SessionRecap() {
-  const navigate = useNavigate();
-  const { user, progress } = useAuth();
+const METRIC_ICONS = {
+  eyeContact: (
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+      <path stroke="#0D9488" strokeWidth="2" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/>
+      <circle cx="12" cy="12" r="3" stroke="#0D9488" strokeWidth="2"/>
+    </svg>
+  ),
+  blinkRate: (
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" stroke="#0D9488" strokeWidth="2"/>
+      <path stroke="#0D9488" strokeWidth="2" d="M12 7v5l3 3"/>
+    </svg>
+  ),
+  speakingPace: (
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+      <rect x="3" y="11" width="18" height="2" rx="1" fill="#0D9488"/>
+    </svg>
+  ),
+  fillerWords: (
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" stroke="#0D9488" strokeWidth="2"/>
+      <path stroke="#0D9488" strokeWidth="2" d="M8 12h8"/>
+    </svg>
+  ),
+  expression: (
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" stroke="#0D9488" strokeWidth="2"/>
+      <path stroke="#0D9488" strokeWidth="2" d="M8 15c1.333-1 4.667-1 6 0"/>
+    </svg>
+  )
+};
 
+function SessionRecap({ userId = "user123" }) {
+  const [currentSession, setCurrentSession] = useState(null);
+  const [allSessions, setAllSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Fetch real session data from backend
   useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!user) {
-      navigate("/login");
+    setLoading(true);
+    async function fetchSessionData() {
+      try {
+        // Get latest session
+        const res = await fetch(`/api/sessions/${userId}/latest`);
+        const session = await res.json();
+        setCurrentSession(session);
+        // Get all sessions
+        const resAll = await fetch(`/api/sessions/${userId}`);
+        const sessions = await resAll.json();
+        setAllSessions(sessions);
+        setTimeout(() => {
+          setLoading(false);
+          if (session && session.overallScore >= 70) {
+            setTimeout(() => setShowCelebration(true), 1500);
+          }
+        }, 600);
+      } catch (e) {
+        setLoading(false);
+      }
     }
-  }, [user, navigate]);
+    fetchSessionData();
+  }, [userId]);
 
-  // Don't render if no user
-  if (!user) {
-    return null;
+  // Spinner
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#F8FAFC]">
+        <div className="animate-spin rounded-full border-4 border-t-transparent border-[#0D9488] w-12 h-12 mb-4" />
+        <div className="text-[#64748B] text-lg">Analyzing your session...</div>
+      </div>
+    );
   }
 
-  const overallScore = 82;
-  
-  const timeline = [
-    { time: "0:15", type: "eye-contact", color: "#EF4444" },
-    { time: "0:45", type: "filler", color: "#F59E0B" },
-    { time: "1:20", type: "good", color: "#10B981" },
-    { time: "1:50", type: "filler", color: "#F59E0B" },
-    { time: "2:30", type: "good", color: "#10B981" },
+  if (!currentSession) return null;
+
+  // Timeline spikes
+  const spikes = [
+    ...(currentSession.blinkRate.spikes || []).map(s => ({
+      timestamp: s.timestamp,
+      type: "blinkRate",
+      severity: getThresholdStatus("blinkRate", s.rate).color === "red" ? "red" : "amber",
+      message: `Blink rate spiked to ${s.rate} BPM`
+    })),
+    ...(currentSession.speakingPace.silences || []).map(s => ({
+      timestamp: s.timestamp,
+      type: "speakingPace",
+      severity: s.duration > 2 ? "red" : "amber",
+      message: `Long pause (${s.duration.toFixed(1)}s)`
+    })),
+    ...(currentSession.expression.tensionSpikes || []).map(s => ({
+      timestamp: s.timestamp,
+      type: "expression",
+      severity: s.intensity > 0.7 ? "red" : "amber",
+      message: `Tension spike (intensity ${s.intensity.toFixed(2)})`
+    }))
   ];
 
-  const improvements = [
-    {
-      title: "Eye Contact Consistency",
-      tip: "Practice maintaining eye contact during the opening 20 seconds",
-      priority: 1,
-    },
-    {
-      title: "Reduce Filler Words",
-      tip: "Pause briefly instead of using 'um' or 'like'",
-      priority: 2,
-    },
-    {
-      title: "Speaking Pace",
-      tip: "You're doing great — keep your current pace",
-      priority: 3,
-    },
-  ];
+  // Suggestions
+  const suggestions = [];
+  if (currentSession.eyeContact.score < 65) {
+    suggestions.push({
+      metric: "eyeContact",
+      message: THRESHOLDS.eyeContact.ranges.red.message
+    });
+  }
+  if (currentSession.blinkRate.average > 20 || currentSession.blinkRate.average < 12) {
+    suggestions.push({
+      metric: "blinkRate",
+      message: currentSession.blinkRate.average > 20 ? THRESHOLDS.blinkRate.ranges.red2.message : THRESHOLDS.blinkRate.ranges.red.message
+    });
+  }
+  if (currentSession.speakingPace.averageWPM > 165 || currentSession.speakingPace.averageWPM < 120) {
+    suggestions.push({
+      metric: "speakingPace",
+      message: currentSession.speakingPace.averageWPM > 165 ? THRESHOLDS.speakingPace.ranges.red2.message : THRESHOLDS.speakingPace.ranges.red.message
+    });
+  }
+  if (currentSession.speakingPace.fillerWords.total > 3) {
+    suggestions.push({
+      metric: "fillerWords",
+      message: THRESHOLDS.fillerWords.ranges.red.message
+    });
+  }
+  const domTone = currentSession.expression.dominantTone;
+  if (domTone === "tense" || domTone === "stressed") {
+    suggestions.push({
+      metric: "expression",
+      message: domTone === "tense" ? THRESHOLDS.expression.ranges.amber2.message : THRESHOLDS.expression.ranges.red.message
+    });
+  }
+
+  // Handlers
+  async function handlePracticeAgain() {
+    setLoading(true);
+    setShowCelebration(false);
+    // Optionally POST to /api/sessions to start a new session
+    window.location.href = "/practice";
+  }
+
+  function handleViewAquarium() {
+    // TODO: open aquarium modal or route
+    console.log("open aquarium");
+  }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="px-12 py-8">
-        <h1 className="text-[#0F172A] logo-font">PosiSense</h1>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 px-12 pb-12">
-        <div className="max-w-5xl mx-auto">
-          {/* Title & Score */}
-          <div className="text-center mb-12">
-            <h2 className="text-4xl mb-8 text-[#0F172A]">Session Complete</h2>
-            
-            {/* Circular Progress Ring */}
-            <div className="flex justify-center mb-6">
-              <div className="relative w-48 h-48">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                  {/* Background circle */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="42"
-                    fill="none"
-                    stroke="#E2E8F0"
-                    strokeWidth="8"
-                  />
-                  {/* Progress circle */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="42"
-                    fill="none"
-                    stroke="#0D9488"
-                    strokeWidth="8"
-                    strokeDasharray={`${2 * Math.PI * 42}`}
-                    strokeDashoffset={`${2 * Math.PI * 42 * (1 - overallScore / 100)}`}
-                    strokeLinecap="round"
-                    className="transition-all duration-1000"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <p className="text-6xl text-[#0F172A]">{overallScore}</p>
-                  <p className="text-[#64748B]">Overall Score</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Achievement Badge */}
-            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-[#FEF3C7] to-[#FDE68A] rounded-full px-6 py-3">
-              <Trophy className="w-5 h-5 text-[#F59E0B]" />
-              <p className="text-[#0F172A]">Personal Best! 🎉</p>
-            </div>
+    <div className="max-w-4xl mx-auto bg-[#F8FAFC] min-h-screen px-6 py-10 relative">
+      {/* Celebration overlay */}
+      {showCelebration && (
+        <ScoreCelebration score={currentSession.overallScore} onComplete={() => setShowCelebration(false)} />
+      )}
+      {/* Section 1: Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+        <div>
+          <div className="text-[32px] font-bold text-[#0F172A]">Session Recap</div>
+          <div className="italic text-[#64748B] mt-1">{currentSession.question}</div>
+        </div>
+        <div className="mt-4 md:mt-0">
+          <span className="bg-[#0D9488] text-white rounded-full px-4 py-1 text-sm font-semibold capitalize">
+            {currentSession.category}
+          </span>
+        </div>
+      </div>
+      {/* Section 2: Score and Metrics */}
+      <div className="flex flex-col md:flex-row gap-8 mb-10">
+        <div className="flex justify-center items-center">
+          <CircularScoreBar score={currentSession.overallScore} size={220} />
+        </div>
+        <div className="grid grid-cols-2 gap-4 flex-1">
+          <MetricCard
+            metric="eyeContact"
+            value={currentSession.eyeContact.score}
+            label="Eye Contact"
+            unit="% on camera"
+          />
+          <MetricCard
+            metric="blinkRate"
+            value={currentSession.blinkRate.average}
+            label="Blink Rate"
+            unit="BPM"
+          />
+          <MetricCard
+            metric="speakingPace"
+            value={currentSession.speakingPace.averageWPM}
+            label="Speaking Pace"
+            unit="WPM"
+          />
+          <MetricCard
+            metric="fillerWords"
+            value={currentSession.speakingPace.fillerWords.total}
+            label="Filler Words"
+            unit="per answer"
+          />
+        </div>
+      </div>
+      {/* Section 3: Timeline */}
+      <div className="mb-10">
+        <div className="flex items-center gap-4 mb-3">
+          <div className="text-xs font-bold uppercase" style={{ color: "#64748B" }}>What Happened</div>
+          <div className="flex-1 h-px bg-[#E2E8F0]" />
+        </div>
+        <SessionTimeline duration={currentSession.duration} spikes={spikes} />
+      </div>
+      {/* Section 4: Suggestions */}
+      <div className="mb-10">
+        <div className="text-xs font-bold uppercase mb-3" style={{ color: "#64748B" }}>Coaching Tips</div>
+        {suggestions.length === 0 ? (
+          <div className="flex items-center gap-2 text-green-600 font-semibold text-lg">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="#10B981" strokeWidth="2"/>
+              <path stroke="#10B981" strokeWidth="2" d="M7 13l3 3 7-7"/>
+            </svg>
+            Outstanding session — no areas of concern detected.
           </div>
-
-          {/* Timeline */}
-          <div className="bg-white rounded-[16px] shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-8 mb-8">
-            <h3 className="text-[#0F172A] mb-6">Session Timeline</h3>
-            <div className="relative">
-              {/* Base line */}
-              <div className="h-2 bg-[#E2E8F0] rounded-full relative">
-                {/* Flagged moments */}
-                {timeline.map((moment, index) => (
-                  <div
-                    key={index}
-                    className="absolute top-1/2 -translate-y-1/2 group"
-                    style={{ left: `${(parseInt(moment.time.split(':')[0]) * 60 + parseInt(moment.time.split(':')[1])) / 180 * 100}%` }}
-                  >
-                    <div
-                      className="w-4 h-4 rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-125 transition-transform"
-                      style={{ backgroundColor: moment.color }}
-                    />
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      <div className="bg-[#0F172A] text-white text-sm rounded-lg px-3 py-2 whitespace-nowrap">
-                        {moment.time}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+        ) : (
+          <div className="grid gap-3">
+            {suggestions.map((s, i) => (
+              <div key={i} className="flex items-center bg-[#F0FDFA] border-l-4 border-[#0D9488] rounded-lg px-4 py-3 gap-3">
+                {METRIC_ICONS[s.metric]}
+                <span className="text-[#0F172A] text-sm">{s.message}</span>
               </div>
-              <div className="flex justify-between mt-3">
-                <p className="text-sm text-[#64748B]">0:00</p>
-                <p className="text-sm text-[#64748B]">3:00</p>
-              </div>
-            </div>
-            
-            {/* Legend */}
-            <div className="flex gap-6 mt-6 justify-center">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#EF4444]"></div>
-                <p className="text-sm text-[#64748B]">Eye Contact Drop</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#F59E0B]"></div>
-                <p className="text-sm text-[#64748B]">Filler Spike</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#10B981]"></div>
-                <p className="text-sm text-[#64748B]">Strong Moment</p>
-              </div>
-            </div>
+            ))}
           </div>
-
-          {/* Improvement Areas */}
-          <div className="bg-white rounded-[16px] shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-8 mb-8">
-            <h3 className="text-[#0F172A] mb-6">Areas for Improvement</h3>
-            <div className="space-y-4">
-              {improvements.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-4 p-5 bg-[#F8FAFC] rounded-xl hover:bg-[#F1F5F9] transition-colors"
-                >
-                  <div className="flex-shrink-0 w-8 h-8 bg-[#0D9488] text-white rounded-full flex items-center justify-center">
-                    {item.priority}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[#0F172A] mb-1">{item.title}</p>
-                    <p className="text-sm text-[#64748B]">{item.tip}</p>
-                  </div>
-                  <TrendingUp className="w-5 h-5 text-[#0D9488] flex-shrink-0" />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Action Button */}
+        )}
+      </div>
+      {/* Section 5: Progress Chart */}
+      <div className="mb-10">
+        <div className="text-xs font-bold uppercase mb-3" style={{ color: "#64748B" }}>Your Progress</div>
+        <ProgressChart sessions={allSessions} />
+      </div>
+      {/* Section 6: Action buttons */}
+      <div className="flex flex-col items-center gap-2 mb-4">
+        <div className="flex gap-4 mb-1">
           <button
-            onClick={() => {
-              // Navigate to unlock screen if score >= 70%, otherwise go home
-              if (overallScore >= 70) {
-                navigate(`/aquarium-unlock?score=${overallScore}`);
-              } else {
-                navigate("/");
-              }
-            }}
-            className="w-full bg-[#0D9488] text-white rounded-xl px-8 py-5 hover:bg-[#0F766E] transition-colors shadow-[0_4px_16px_rgba(13,148,136,0.2)]"
+            className="border-2 border-[#0D9488] text-[#0D9488] font-semibold px-6 py-2 rounded-full hover:bg-[#F0FDFA] transition"
+            onClick={handlePracticeAgain}
           >
-            {overallScore >= 70 ? "See Your Reward" : "Start New Session"}
+            Practice Again
+          </button>
+          <button
+            className="bg-[#0D9488] text-white font-semibold px-6 py-2 rounded-full hover:bg-[#0F766E] transition"
+            onClick={handleViewAquarium}
+          >
+            View My Aquarium
           </button>
         </div>
-      </main>
+        <div className="text-xs text-[#94A3B8]">Session saved to your profile.</div>
+      </div>
     </div>
   );
 }
+
+export default SessionRecap;

@@ -25,17 +25,21 @@ const questions = {
 
 export default function QuestionSelect() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [searchParams] = useSearchParams();
   const category = (searchParams.get("category") || "Behavioral");
   const [selectedQuestion, setSelectedQuestion] = useState(null);
 
   useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!user) {
+    // Redirect to login if not authenticated, but only after loading
+    if (!loading && !user) {
       navigate("/login");
     }
-  }, [user, navigate]);
+    // Optionally show loading UI
+  }, [user, loading, navigate]);
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen text-lg text-gray-400">Loading...</div>;
+  }
 
   const categoryQuestions = questions[category] || questions.Behavioral;
 

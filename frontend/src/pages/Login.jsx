@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -27,7 +27,8 @@ export default function Login() {
             return;
         }
 
-        const success = await login(formData.email, formData.password, isSignUp ? formData.name : undefined);
+        // Only login (no sign up in this form)
+        const success = await login(formData.email, formData.password, formData.name);
 
         setIsLoading(false);
 
@@ -204,17 +205,11 @@ export default function Login() {
                         </button>
                     </form>
 
-                    {/* Toggle Sign Up/Login */}
+                    {/* Link to Register */}
                     <div className="mt-6 text-center">
-                        <button
-                            onClick={() => {
-                                setIsSignUp(!isSignUp);
-                                setError("");
-                            }}
-                            className="text-[#0D9488] hover:text-[#0F766E] transition-colors"
-                        >
-                            {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
-                        </button>
+                        <Link to="/register" className="text-[#0D9488] hover:text-[#0F766E] transition-colors">
+                            Don't have an account? Sign up
+                        </Link>
                     </div>
                 </div>
             </div>
