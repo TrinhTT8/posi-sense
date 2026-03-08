@@ -74,15 +74,7 @@ export default function Home() {
             {/* Main Content */}
             <main className="flex-1 flex items-center justify-center px-12">
                 <div className="w-full max-w-2xl">
-                    {/* Aquarium View Button */}
-                    <div className="flex justify-end mb-4">
-                        <button
-                            onClick={() => navigate('/aquarium-view')}
-                            className="bg-gradient-to-r from-[#0C4A6E] to-[#0A1628] text-white rounded-xl px-6 py-3 font-medium shadow-lg hover:from-[#0A1628] hover:to-[#0C4A6E] transition-all"
-                        >
-                            🐠 View My Aquarium
-                        </button>
-                    </div>
+                    {/* Removed standalone Aquarium View Button (now in stats bar) */}
                     {/* Greeting */}
                     <div className="text-center mb-8">
                         <h2 className="text-4xl text-[#0F172A] mb-2">
@@ -156,6 +148,19 @@ export default function Home() {
                                 <p className="text-[#0F172A]">{progress.totalSessions} completed</p>
                             </div>
                         </div>
+                        <div className="w-px h-10 bg-[#E2E8F0]"></div>
+                        <button
+                            onClick={() => navigate("/aquarium-view")}
+                            className="flex items-center gap-3 hover:scale-105 transition-transform"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#0EA5E9" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12c0 4.556 4.694 8.25 9.75 8.25s9.75-3.694 9.75-8.25S16.306 3.75 12 3.75 2.25 7.444 2.25 12zm0 0c0 1.25 2.25 2.25 4.5 2.25s4.5-1 4.5-2.25m-9 0c0-1.25 2.25-2.25 4.5-2.25s4.5 1 4.5 2.25m0 0c0 1.25 2.25 2.25 4.5 2.25s4.5-1 4.5-2.25m-9 0c0-1.25 2.25-2.25 4.5-2.25s4.5 1 4.5 2.25" />
+                            </svg>
+                            <div>
+                                <p className="text-sm text-[#64748B]">My Aquarium</p>
+                                <p className="text-[#0F172A]">{progress.aquarium?.length || 0} unlocked</p>
+                            </div>
+                        </button>
                     </div>
                 </div>
             </footer>

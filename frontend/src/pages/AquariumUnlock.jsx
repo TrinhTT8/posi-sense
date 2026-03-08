@@ -57,7 +57,7 @@ export default function AquariumUnlock() {
       {/* Action Buttons */}
       {showReward && (
         <div className="flex gap-6 mt-12 fade-in">
-          <button onClick={() => navigate("/aquarium-view")} className="bg-[#0D9488] text-white rounded-xl px-8 py-5 text-lg font-medium shadow-lg hover:bg-[#0F766E] transition-all">View My Aquarium</button>
+          <button onClick={() => navigate("/aquarium")} className="bg-[#0D9488] text-white rounded-xl px-8 py-5 text-lg font-medium shadow-lg hover:bg-[#0F766E] transition-all">View My Aquarium</button>
           <button onClick={() => navigate("/")} className="border-2 border-[#0D9488] text-[#0D9488] bg-transparent rounded-xl px-8 py-5 text-lg font-medium hover:bg-[#F0FDFA] transition-all">Back to Home</button>
         </div>
       )}
