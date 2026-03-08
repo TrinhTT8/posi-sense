@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import QuestionSelect from "./pages/QuestionSelect";
 import Practice from "./pages/Practice";
 import Scorecard from "./pages/Scorecard";
+import ScoreBarDemo from "./ScoreBarDemo";
 
 import SessionRecap from "./pages/SessionRecap";
 
@@ -53,6 +54,10 @@ export const router = createBrowserRouter([
             {
                 path: "/session-recap",
                 Component: SessionRecap,
+            },
+            {
+                path: "/scorebar-demo",
+                Component: ScoreBarDemo,
             },
             // AquariumUnlock route removed
             {

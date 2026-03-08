@@ -83,3 +83,6 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+import sessionsRouter from "./routes/sessions.js";
+app.use("/api/sessions", sessionsRouter);

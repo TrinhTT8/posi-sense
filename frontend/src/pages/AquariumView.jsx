@@ -1,138 +1,151 @@
 
 
+// Fetch aquarium from backend: GET /api/aquarium/:userId
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import confetti from "canvas-confetti";
+
 import { useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 
-// Fish index based on PNGs in assets (add more as needed)
+
+// All fish from assets folder
 const FISH_INDEX = [
-  { name: "Anchovy", img: "/assets/Anchovy.png" },
-  { name: "Angelfish", img: "/assets/Angelfish.png" },
-  { name: "Bass", img: "/assets/Bass.png" },
-  { name: "Catfish", img: "/assets/Catfish.png" },
-  { name: "Clownfish", img: "/assets/Clownfish.png" },
-  { name: "Dungeness Crab", img: "/assets/Dungeness%20Crab.png" },
-  { name: "Goldfish", img: "/assets/Goldfish.png" },
-  { name: "Pufferfish", img: "/assets/Pufferfish.png" },
-  { name: "Rainbow Trout", img: "/assets/Rainbow%20Trout.png" },
-  { name: "Surgeonfish", img: "/assets/Surgeonfish.png" },
+  { id: "fish_01", name: "Anchovy", img: "/assets/Anchovy.png", tier: "common" },
+  { id: "fish_02", name: "Angelfish", img: "/assets/Angelfish.png", tier: "common" },
+  { id: "fish_03", name: "Bass", img: "/assets/Bass.png", tier: "common" },
+  { id: "fish_04", name: "Catfish", img: "/assets/Catfish.png", tier: "common" },
+  { id: "fish_05", name: "Clownfish", img: "/assets/Clownfish.png", tier: "common" },
+  { id: "fish_06", name: "Dungeness Crab", img: "/assets/Dungeness Crab.png", tier: "common" },
+  { id: "fish_07", name: "Goldfish", img: "/assets/Goldfish.png", tier: "common" },
+  { id: "fish_08", name: "Pufferfish", img: "/assets/Pufferfish.png", tier: "common" },
+  { id: "fish_09", name: "Rainbow Trout", img: "/assets/Rainbow Trout.png", tier: "common" },
+  { id: "fish_10", name: "Surgeonfish", img: "/assets/Surgeonfish.png", tier: "common" },
 ];
+const LOCKED_ITEMS = [];
+
+const TIER_COLORS = {
+  common: ["#0D9488", "#CCFBF1", "#FFFFFF"],
+  rare: ["#8B5CF6", "#E0E7FF", "#FFFFFF"],
+  special: ["#F59E0B", "#FDE68A", "#FFFFFF"]
+};
+
+export function triggerUnlockAnimation(item) {
+  const colors = TIER_COLORS[item.tier] || ["#0D9488", "#FFFFFF"];
+  confetti({
+    particleCount: 90,
+    spread: 80,
+    origin: { y: 0.5 },
+    colors,
+  });
+  // Overlay logic should be handled in AquariumView state
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
+const FISH_EMOJI = "🐠";
+const CORAL_EMOJI = "🪸";
+const RARE_CORAL_EMOJI = "🌺";
+const SPECIAL_DECOR_EMOJI = "✨";
+const LOCK_ICON = "🔒";
 
 export default function AquariumView() {
   const navigate = useNavigate();
   const { user, progress } = useAuth();
-  // Only show unlocked fish if present in progress.aquarium (array of names)
-  const unlockedItems = (progress?.aquarium && Array.isArray(progress.aquarium))
-    ? progress.aquarium
-    : [];
-  const lockedFish = FISH_INDEX.filter(f => !unlockedItems.includes(f.name));
-  const sessionCount = progress?.totalSessions || 0;
+  const [unlockedFish, setUnlockedFish] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    fetch(`http://localhost:5000/api/aquarium/${user.id}`)
+      .then(res => res.json())
+      .then(data => {
+        // Sort by unlock date ascending
+        const sorted = data
+          .filter(item => item.type === 'fish')
+          .sort((a, b) => new Date(a.dateUnlocked) - new Date(b.dateUnlocked));
+        setUnlockedFish(sorted);
+        setLoading(false);
+      });
+  }, [user]);
+
+  // Map unlocked fish to FISH_INDEX for image/tier
+  const displayFish = unlockedFish.map(f => {
+    const fishMeta = FISH_INDEX.find(meta => meta.name === f.name);
+    return {
+      ...f,
+      img: fishMeta ? fishMeta.img : '',
+      tier: fishMeta ? fishMeta.tier : 'common',
+    };
+  });
+
+  // Locked count
+  const lockedCount = FISH_INDEX.length - displayFish.length;
 
   return (
-    <div 
-      className="min-h-screen flex flex-col py-8 px-12 bg-[#F8FAFC]"
-      style={{ background: "linear-gradient(180deg, #c6ebf1 0%, #d6f8f6 60%, #b4c9cc 100%)" }}
-    >
-      {/* Header */}
-      <header className="relative flex items-center justify-between mb-8 w-full max-w-6xl mx-auto" style={{ minHeight: 56 }}>
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 text-[#64748B] hover:text-[#0F172A] transition-colors text-lg font-medium z-10"
-        >
-          ← <span>Back</span>
-        </button>
-        {/* Centered header absolutely, always centered on screen */}
-        <h2
-          className="text-3xl text-[#0F172A] font-bold logo-font text-center absolute left-1/2 -translate-x-1/2 w-full pointer-events-none"
-          style={{ top: 0 }}
-        >
-          My Aquarium
-        </h2>
-        <div className="text-[#64748B] text-base z-10" style={{ minWidth: 120, textAlign: 'right' }}>{sessionCount} sessions · {unlockedItems.length} unlocks</div>
-      </header>
+    <div className="min-h-screen flex flex-col items-center px-12 py-12 bg-[#F8FAFC] transition-all duration-1000">
+      {/* Top Bar */}
+      <div className="flex items-center justify-between w-full max-w-4xl mb-8">
+        <button onClick={() => navigate("/")} className="border-2 border-[#0D9488] text-[#0D9488] bg-transparent rounded-xl px-6 py-2 font-medium hover:bg-[#F0FDFA] transition-all">Back to Home</button>
+        <h1 className="text-[#0F172A] text-4xl font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>My Aquarium</h1>
+        <div className="text-[#64748B] text-base">{progress?.totalSessions || 0} sessions · {displayFish.length} unlocks</div>
+      </div>
 
-      {/* Main Aquarium Tank */}
-      <div className="flex-1 flex items-center justify-center mb-8 w-full">
-        <div 
-          className="bg-gradient-to-b from-[#E0F2FE] to-[#BAE6FD] rounded-[24px] p-8 relative overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.06)]"
-          style={{ width: "90%", maxWidth: "1200px", height: "70vh", minHeight: "500px" }}
-        >
-          {/* ...removed SVG border for cleaner look... */}
-          {/* Subtle paper texture overlay */}
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              zIndex: 2,
-              opacity: 0.12,
-              backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle cx=\'30\' cy=\'30\' r=\'1.5\' fill=\'%230ea5e9\'/\%3E%3C/svg%3E")',
-              backgroundRepeat: 'repeat',
-            }}
-          />
-          {/* Tank content area: show unlocked fish PNGs */}
-          <div className="relative w-full h-full flex items-center justify-center" style={{ zIndex: 3 }}>
-            {unlockedItems.length > 0 ? (
-              FISH_INDEX.filter(f => unlockedItems.includes(f.name)).map((fish, i) => (
-                <img
-                  key={fish.name}
-                  src={fish.img}
-                  alt={fish.name}
-                  className="mx-4"
-                  style={{
-                    width: 90,
-                    height: 62,
-                    zIndex: 4,
-                    filter: 'drop-shadow(0 2px 8px #0ea5e955)',
-                    transition: 'transform 0.5s',
-                  }}
-                  draggable={false}
-                  title={fish.name}
-                />
-              ))
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <p className="text-[#64748B] text-xl mb-3">Your aquarium is empty</p>
-                <p className="text-[#94A3B8] text-sm">Score above 70% in practice sessions to unlock new items</p>
-              </div>
-            )}
+      {/* Aquarium Tank */}
+      <div className="bg-gradient-to-b from-[#E0F2FE] to-[#BAE6FD] rounded-[24px] p-8 mb-8 relative overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.06)]" style={{ width: "800px", height: "460px" }}>
+        <div className="relative w-full h-full">
+          {/* Fish with images */}
+          {displayFish.map((fish, i) => {
+            const left = 10 + (i * 80) % 600;
+            const top = 60 + (i % 3) * 100;
+            return (
+              <img
+                key={fish._id || fish.name}
+                src={fish.img}
+                alt={fish.name}
+                style={{
+                  position: "absolute",
+                  left,
+                  top,
+                  width: 90,
+                  height: 62,
+                  objectFit: 'contain',
+                  filter: 'drop-shadow(0 2px 8px #0ea5e955)',
+                  cursor: 'pointer',
+                  transition: 'transform 0.3s',
+                }}
+                title={fish.name + (fish.dateUnlocked ? ` (Unlocked ${formatDate(fish.dateUnlocked)})` : '')}
+                className="hover:scale-110"
+              />
+            );
+          })}
+
+          {/* Water effect - bubbles */}
+          <div className="absolute bottom-10 left-10 animate-bubble-float">
+            <div className="w-3 h-3 rounded-full bg-white/50"></div>
+          </div>
+          <div className="absolute bottom-20 right-20 animate-bubble-float" style={{ animationDelay: "1s" }}>
+            <div className="w-2 h-2 rounded-full bg-white/50"></div>
+          </div>
+          <div className="absolute bottom-32 left-1/3 animate-bubble-float" style={{ animationDelay: "2s" }}>
+            <div className="w-2.5 h-2.5 rounded-full bg-white/50"></div>
           </div>
         </div>
       </div>
 
-      {/* Locked Collection Strip */}
-      <div className="max-w-5xl mx-auto w-full">
-        <div className="bg-white rounded-[16px] p-6 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
-          <p className="text-[#64748B] text-sm mb-4">Locked Fish</p>
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            {lockedFish.map((_, i) => (
-              <div
-                key={i}
-                className="flex-shrink-0 w-20 h-20 bg-[#F8FAFC] rounded-xl border-2 border-[#E2E8F0] flex items-center justify-center relative group opacity-80 overflow-hidden"
-              >
-                {/* Generic shadow or lock icon for locked fish */}
-                <div className="w-12 h-12 flex items-center justify-center">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-                    <ellipse cx="12" cy="16" rx="10" ry="6" fill="#CBD5E1" opacity="0.5" />
-                    <rect x="7" y="8" width="10" height="8" rx="3" fill="#CBD5E1" />
-                    <rect x="10" y="5" width="4" height="4" rx="2" fill="#CBD5E1" opacity="0.7" />
-                  </svg>
-                </div>
-                {/* Lock icon overlay */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="6" y="10" width="12" height="8" rx="3" fill="#94A3B8"/><rect x="9" y="7" width="6" height="6" rx="3" fill="#94A3B8" opacity="0.7"/></svg>
-                </div>
-              </div>
-            ))}
+      {/* Locked silhouettes strip */}
+      <div className="flex gap-4 mb-8">
+        {[...Array(lockedCount)].map((_, i) => (
+          <div key={i} className="w-12 h-12 bg-[#0A1628] rounded-full flex items-center justify-center opacity-60">
+            <span className="material-icons text-2xl text-[#64748B]">lock</span>
           </div>
-        </div>
+        ))}
       </div>
 
-      {/* Bottom Text */}
-      <p className="text-[#94A3B8] text-sm text-center mt-6">
-        Practice and score above 70% to unlock new additions
-      </p>
+      <div className="text-[#94A3B8] text-center mb-8">Practice and score above 70% to unlock new additions.</div>
 
       <style>{`
         @keyframes swim {
@@ -142,14 +155,24 @@ export default function AquariumView() {
           75% { transform: translateX(-10px) translateY(-5px); }
         }
 
+        @keyframes sway {
+          0%, 100% { transform: rotate(-3deg); }
+          50% { transform: rotate(3deg); }
+        }
+
         @keyframes bubble-float {
           0% { transform: translateY(0) scale(1); opacity: 0.3; }
           50% { opacity: 0.5; }
-          100% { transform: translateY(-120px) scale(1.5); opacity: 0; }
+          100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
         }
 
         .animate-swim {
           animation: swim 8s ease-in-out infinite;
+        }
+
+        .animate-sway {
+          animation: sway 4s ease-in-out infinite;
+          transform-origin: bottom center;
         }
 
         .animate-bubble-float {

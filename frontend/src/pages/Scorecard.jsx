@@ -17,30 +17,12 @@ export default function Scorecard() {
     return <div className="flex items-center justify-center min-h-screen text-lg text-gray-400">Loading...</div>;
   }
 
-  const metrics = [
-    { label: "Eye Contact", value: "78%", trend: "up", change: "+5%", numericValue: 78 },
-    { label: "Filler Words", value: "12", trend: "down", change: "-3", numericValue: 12 },
-    { label: "Speaking Pace", value: "142 wpm", trend: "neutral", change: "±0", numericValue: 142 },
-    { label: "Expression Score", value: "8.5/10", trend: "up", change: "+0.5", numericValue: 8.5 },
-  ];
+  // TODO: Replace with real session/question data from backend or context
+  const metrics = user && user.lastSessionMetrics ? user.lastSessionMetrics : [];
 
   const handleNextQuestion = () => {
-    // Save session data before moving to next question
-    const sessionData = {
-      id: Math.random().toString(36).substr(2, 9),
-      date: new Date().toISOString(),
-      category: "Behavioral", // This would come from the practice session
-      question: "Sample question", // This would come from the practice session
-      score: 82,
-      metrics: {
-        eyeContact: 78,
-        fillerWords: 12,
-        pace: "142 wpm",
-        expression: 8.5,
-      },
-    };
-    
-    saveSession(sessionData);
+    // Save session data before moving to next question (real implementation)
+    // saveSession(realSessionData);
     navigate("/session-recap");
   };
 
