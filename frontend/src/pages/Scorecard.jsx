@@ -1,63 +1,105 @@
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useEffect } from "react";
 
 export default function Scorecard() {
   const navigate = useNavigate();
-  const { user, saveSession, loading } = useAuth();
+  const location = useLocation();
+  const { user, saveSession } = useAuth();
+
+  // Pull real stats passed from Practice, fall back to demo values if navigated directly
+  const { stats, question, category } = location.state || {};
+  const s = stats || {
+    eyeContact: 78, eyeContactTrend: "up", eyeContactChange: "+5%",
+    fillerWords: 12, fillerTrend: "down", fillerChange: "-3",
+    wpm: 142, paceTrend: "neutral", paceChange: "±0",
+    expressionScore: 8.5, expressionTrend: "up", expressionChange: "+0.5",
+    overallScore: 82,
+  };
 
   useEffect(() => {
-    // Redirect to login if not authenticated, but only after loading
-    if (!loading && !user) {
-      navigate("/login");
-    }
-  }, [user, loading, navigate]);
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen text-lg text-gray-400">Loading...</div>;
-  }
+    if (!user) navigate("/login");
+  }, [user, navigate]);
 
-  // TODO: Replace with real session/question data from backend or context
-  const metrics = user && user.lastSessionMetrics ? user.lastSessionMetrics : [];
+  const metrics = [
+    {
+      label: "Eye Contact",
+      value: `${s.eyeContact}%`,
+      trend: s.eyeContactTrend,
+      change: s.eyeContactChange,
+    },
+    {
+      label: "Filler Words",
+      value: `${s.fillerWords}`,
+      trend: s.fillerTrend,
+      change: s.fillerChange,
+    },
+    {
+      label: "Speaking Pace",
+      value: `${s.wpm} wpm`,
+      trend: s.paceTrend,
+      change: s.paceChange,
+    },
+    {
+      label: "Expression Score",
+      value: `${s.expressionScore}/10`,
+      trend: s.expressionTrend,
+      change: s.expressionChange,
+    },
+  ];
+
+  // Dynamic insight based on actual weakest metric
+  const getInsight = () => {
+    if (s.eyeContact < 60) return "Low eye contact detected — especially in the first 15 seconds. Try fixing your gaze on the camera lens before you start speaking.";
+    if (s.fillerWords > 15) return `You used ${s.fillerWords} filler words this round. Practice pausing silently instead of filling with "um" or "like".`;
+    if (s.wpm > 155) return "You were speaking faster than ideal. Slow down slightly — pausing between points makes you sound more confident.";
+    if (s.nervousSpikes > 1) return "A couple of composure dips were detected. Try taking one slow breath before you start your answer.";
+    return "Solid performance! Your eye contact and pace were consistent. Keep building on this foundation.";
+  };
 
   const handleNextQuestion = () => {
-    // Save session data before moving to next question (real implementation)
-    // saveSession(realSessionData);
+    const sessionData = {
+      id: Math.random().toString(36).substr(2, 9),
+      date: new Date().toISOString(),
+      category: category || "Behavioral",
+      question: question || "Sample question",
+      score: s.overallScore,
+      metrics: {
+        eyeContact: s.eyeContact,
+        fillerWords: s.fillerWords,
+        pace: `${s.wpm} wpm`,
+        expression: s.expressionScore,
+      },
+    };
+    saveSession(sessionData);
     navigate("/session-recap");
   };
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
       <header className="px-12 py-8">
         <h1 className="text-[#0F172A] logo-font">PosiSense</h1>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1 flex items-center justify-center px-12 pb-12">
         <div className="w-full max-w-4xl">
-          {/* Title */}
           <div className="text-center mb-12">
             <h2 className="text-4xl mb-2 text-[#0F172A]">Answer Review</h2>
             <p className="text-[#64748B]">Here's how you performed on that question</p>
           </div>
 
-          {/* Metrics Grid */}
           <div className="grid grid-cols-2 gap-6 mb-10">
             {metrics.map((metric) => (
               <MetricTile key={metric.label} {...metric} />
             ))}
           </div>
 
-          {/* Insight Callout */}
           <div className="bg-gradient-to-br from-[#F0FDFA] to-[#ECFDF5] rounded-[16px] p-8 mb-10 border-l-4 border-[#0D9488]">
             <p className="text-sm text-[#0D9488] mb-2">💡 Key Insight</p>
-            <p className="text-[#0F172A] text-lg leading-relaxed">
-              You looked away most during the first 15 seconds — a common nerves pattern. Try taking a deep breath before starting.
-            </p>
+            <p className="text-[#0F172A] text-lg leading-relaxed">{getInsight()}</p>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex gap-4">
             <button
               onClick={() => navigate("/practice")}
@@ -78,32 +120,16 @@ export default function Scorecard() {
   );
 }
 
-function MetricTile({ 
-  label, 
-  value, 
-  trend, 
-  change 
-}) {
+function MetricTile({ label, value, trend, change }) {
   const getTrendIcon = () => {
-    switch (trend) {
-      case "up":
-        return <TrendingUp className="w-5 h-5 text-[#10B981]" />;
-      case "down":
-        return <TrendingDown className="w-5 h-5 text-[#EF4444]" />;
-      default:
-        return <Minus className="w-5 h-5 text-[#64748B]" />;
-    }
+    if (trend === "up") return <TrendingUp className="w-5 h-5 text-[#10B981]" />;
+    if (trend === "down") return <TrendingDown className="w-5 h-5 text-[#EF4444]" />;
+    return <Minus className="w-5 h-5 text-[#64748B]" />;
   };
-
   const getTrendColor = () => {
-    switch (trend) {
-      case "up":
-        return "text-[#10B981]";
-      case "down":
-        return "text-[#EF4444]";
-      default:
-        return "text-[#64748B]";
-    }
+    if (trend === "up") return "text-[#10B981]";
+    if (trend === "down") return "text-[#EF4444]";
+    return "text-[#64748B]";
   };
 
   return (
@@ -113,7 +139,7 @@ function MetricTile({
         <p className="text-5xl text-[#0F172A]">{value}</p>
         <div className="flex items-center gap-2 mb-2">
           {getTrendIcon()}
-          <p className={`${getTrendColor()}`}>{change}</p>
+          <p className={getTrendColor()}>{change}</p>
         </div>
       </div>
     </div>
