@@ -38,7 +38,7 @@ export default function Home() {
         <div className="min-h-screen flex flex-col">
             {/* Header */}
             <header className="px-12 py-8 flex items-center justify-between">
-                <h1 className="text-[#0F172A] logo-font animate-gentle-bounce">PosiSense</h1>
+                <h1 className="text-[#0F172A] logo-font">PosiSense</h1>
 
                 {/* User Menu */}
                 <div className="relative">
@@ -74,10 +74,19 @@ export default function Home() {
             {/* Main Content */}
             <main className="flex-1 flex items-center justify-center px-12">
                 <div className="w-full max-w-2xl">
+                    {/* Aquarium View Button */}
+                    <div className="flex justify-end mb-4">
+                        <button
+                            onClick={() => navigate('/aquarium-view')}
+                            className="bg-gradient-to-r from-[#0C4A6E] to-[#0A1628] text-white rounded-xl px-6 py-3 font-medium shadow-lg hover:from-[#0A1628] hover:to-[#0C4A6E] transition-all"
+                        >
+                            🐠 View My Aquarium
+                        </button>
+                    </div>
                     {/* Greeting */}
                     <div className="text-center mb-8">
                         <h2 className="text-4xl text-[#0F172A] mb-2">
-                            {getGreeting()}, {user.name.split(" ")[0]}! 👋
+                            {getGreeting()}, {user.name.split(" ")[0]}!
                         </h2>
                         <p className="text-[#64748B]">Ready to practice your interview skills?</p>
                     </div>

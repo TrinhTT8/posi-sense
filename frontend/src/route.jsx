@@ -5,7 +5,11 @@ import Home from "./pages/Home";
 import QuestionSelect from "./pages/QuestionSelect";
 import Practice from "./pages/Practice";
 import Scorecard from "./pages/Scorecard";
+
 import SessionRecap from "./pages/SessionRecap";
+
+import AquariumUnlock from "./pages/AquariumUnlock";
+import AquariumView from "./pages/AquariumView";
 
 // Wrapper component to protect routes
 function ProtectedRoute() {
@@ -44,6 +48,14 @@ export const router = createBrowserRouter([
             {
                 path: "/session-recap",
                 Component: SessionRecap,
+            },
+            {
+                path: "/aquarium-unlock",
+                Component: AquariumUnlock,
+            },
+            {
+                path: "/aquarium-view",
+                Component: AquariumView,
             },
         ]
     }

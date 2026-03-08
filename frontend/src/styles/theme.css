@@ -2,7 +2,7 @@
 
 :root {
     --font-size: 16px;
-    --background: #F8FAFC;
+    --background: #edfcff;
     --foreground: #0F172A;
     --card: #FFFFFF;
     --card-foreground: #0F172A;
@@ -141,7 +141,7 @@
     }
 
     h1 {
-        font-size: var(--text-4xl);
+        font-size: var(--text-2xl);
         font-weight: var(--font-weight-medium);
         line-height: 1.5;
     }
