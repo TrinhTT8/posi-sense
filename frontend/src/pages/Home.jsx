@@ -38,7 +38,7 @@ export default function Home() {
         <div className="min-h-screen flex flex-col">
             {/* Header */}
             <header className="px-12 py-8 flex items-center justify-between">
-                <h1 className="text-[#0F172A] logo-font">PosiSense</h1>
+                <h1 className="text-[#0F172A] logo-font animate-gentle-bounce">PosiSense</h1>
 
                 {/* User Menu */}
                 <div className="relative">

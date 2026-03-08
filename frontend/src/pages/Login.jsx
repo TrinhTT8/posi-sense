@@ -61,16 +61,16 @@ export default function Login() {
                     {/* Wave 1 */}
                     <path
                         fill="url(#waveGradient1)"
-                        d="M0,100 C300,150 600,50 900,100 C1050,125 1150,100 1200,100 L1200,300 L0,300 Z"
+                        d="M0,60 C300,160 600,-40 900,60 C1050,90 1150,60 1200,60 L1200,300 L0,300 Z"
                     >
                         <animate
                             attributeName="d"
                             dur="3s"
                             repeatCount="indefinite"
                             values="
-                            M0,100 C300,150 600,50 900,100 C1050,125 1150,100 1200,100 L1200,300 L0,300 Z;
-                            M0,100 C300,50 600,150 900,100 C1050,75 1150,100 1200,100 L1200,300 L0,300 Z;
-                            M0,100 C300,150 600,50 900,100 C1050,125 1150,100 1200,100 L1200,300 L0,300 Z"
+                            M0,60 C300,160 600,-40 900,60 C1050,90 1150,60 1200,60 L1200,300 L0,300 Z;
+                            M0,60 C300,-40 600,160 900,60 C1050,20 1150,60 1200,60 L1200,300 L0,300 Z;
+                            M0,60 C300,160 600,-40 900,60 C1050,90 1150,60 1200,60 L1200,300 L0,300 Z"
                         />
                     </path>
 
@@ -111,7 +111,7 @@ export default function Login() {
             <div className="w-full max-w-md relative z-10">
                 {/* Logo/Brand */}
                 <div className="text-center mb-12">
-                    <h1 className="text-[#0F172A] mb-2 logo-font">PosiSense</h1>
+                    <h1 className="text-[#0F172A] mb-2 logo-font text-5xl">PosiSense</h1>
                     <p className="text-[#64748B]">Master your interview presence</p>
                 </div>
 
@@ -196,8 +196,8 @@ export default function Login() {
                             type="submit"
                             disabled={isLoading}
                             className={`w-full rounded-xl px-8 py-4 transition-all ${isLoading
-                                    ? "bg-[#94A3B8] text-white cursor-not-allowed"
-                                    : "bg-[#0D9488] text-white hover:bg-[#0F766E] shadow-[0_4px_16px_rgba(13,148,136,0.2)]"
+                                ? "bg-[#94A3B8] text-white cursor-not-allowed"
+                                : "bg-[#0D9488] text-white hover:bg-[#0F766E] shadow-[0_4px_16px_rgba(13,148,136,0.2)]"
                                 }`}
                         >
                             {isLoading ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
