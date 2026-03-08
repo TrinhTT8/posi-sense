@@ -1,21 +1,25 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { ChevronDown, Flame, Activity, LogOut, User } from "lucide-react";
+
 import { useAuth } from "../context/AuthContext";
 
 export default function Home() {
     const navigate = useNavigate();
-    const { user, progress, logout } = useAuth();
+    const { user, progress, logout, loading } = useAuth();
     const [selectedCategory, setSelectedCategory] = useState("Behavioral");
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
 
     const categories = ["Behavioral", "Situational", "Technical"];
 
-    // Redirect to login if not authenticated
-    if (!user) {
+    // Redirect to login if not authenticated, but only after loading
+    if (!loading && !user) {
         navigate("/login");
         return null;
+    }
+    if (loading) {
+        return <div className="flex items-center justify-center min-h-screen text-lg text-gray-400">Loading...</div>;
     }
 
     const handleStartPractice = () => {

@@ -5,14 +5,17 @@ import { useEffect } from "react";
 
 export default function Scorecard() {
   const navigate = useNavigate();
-  const { user, saveSession } = useAuth();
+  const { user, saveSession, loading } = useAuth();
 
   useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!user) {
+    // Redirect to login if not authenticated, but only after loading
+    if (!loading && !user) {
       navigate("/login");
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen text-lg text-gray-400">Loading...</div>;
+  }
 
   const metrics = [
     { label: "Eye Contact", value: "78%", trend: "up", change: "+5%", numericValue: 78 },

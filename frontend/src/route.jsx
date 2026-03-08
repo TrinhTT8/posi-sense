@@ -9,13 +9,13 @@ import Scorecard from "./pages/Scorecard";
 
 import SessionRecap from "./pages/SessionRecap";
 
-import AquariumUnlock from "./pages/AquariumUnlock";
+// import AquariumUnlock from "./pages/AquariumUnlock";
 import AquariumView from "./pages/AquariumView";
 
 // Wrapper component to protect routes
 function ProtectedRoute() {
-    const { user } = useAuth();
-
+    const { user, loading } = useAuth();
+    if (loading) return null; // Optionally, render a spinner here
     if (!user) {
         return <Navigate to="/login" replace />;
     }
@@ -54,10 +54,7 @@ export const router = createBrowserRouter([
                 path: "/session-recap",
                 Component: SessionRecap,
             },
-            {
-                path: "/aquarium-unlock",
-                Component: AquariumUnlock,
-            },
+            // AquariumUnlock route removed
             {
                 path: "/aquarium-view",
                 Component: AquariumView,

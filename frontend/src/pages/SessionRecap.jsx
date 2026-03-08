@@ -5,17 +5,20 @@ import { useEffect } from "react";
 
 export default function SessionRecap() {
   const navigate = useNavigate();
-  const { user, progress } = useAuth();
+  const { user, progress, loading } = useAuth();
 
   useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!user) {
+    // Redirect to login if not authenticated, but only after loading
+    if (!loading && !user) {
       navigate("/login");
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen text-lg text-gray-400">Loading...</div>;
+  }
 
-  // Don't render if no user
-  if (!user) {
+  // Don't render if no user (after loading)
+  if (!user && !loading) {
     return null;
   }
 

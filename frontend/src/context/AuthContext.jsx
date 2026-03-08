@@ -10,19 +10,19 @@ export function AuthProvider({ children }) {
     lastSessionDate: "",
     sessionHistory: [],
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Load user from localStorage on mount
     const storedUser = localStorage.getItem("posisense_user");
     const storedProgress = localStorage.getItem("posisense_progress");
-    
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
-    
     if (storedProgress) {
       setProgress(JSON.parse(storedProgress));
     }
+    setLoading(false);
   }, []);
 
   // Login with backend
@@ -109,7 +109,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, progress, login, logout, register, saveSession }}>
+    <AuthContext.Provider value={{ user, progress, login, logout, register, saveSession, loading }}>
       {children}
     </AuthContext.Provider>
   );
