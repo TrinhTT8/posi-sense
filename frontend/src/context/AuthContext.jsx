@@ -25,43 +25,45 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // Login with backend
   const login = async (email, password, name) => {
-    // Mock authentication - in real app, this would call an API
-    if (password.length >= 6) {
-      const newUser = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: name || email.split("@")[0],
-        email,
-      };
-      
-      setUser(newUser);
-      localStorage.setItem("posisense_user", JSON.stringify(newUser));
-      
-      // Load or create progress for this user
-      const userProgressKey = `posisense_progress_${newUser.id}`;
-      const existingProgress = localStorage.getItem(userProgressKey);
-      
-      if (existingProgress) {
-        const loadedProgress = JSON.parse(existingProgress);
-        setProgress(loadedProgress);
-        localStorage.setItem("posisense_progress", JSON.stringify(loadedProgress));
+    try {
+      const res = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, username: name, password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.user) {
+        setUser(data.user);
+        localStorage.setItem("posisense_user", JSON.stringify(data.user));
+        return true;
       } else {
-        const newProgress = {
-          streak: 0,
-          totalSessions: 0,
-          lastSessionDate: "",
-          sessionHistory: [],
-        };
-        setProgress(newProgress);
-        localStorage.setItem(userProgressKey, JSON.stringify(newProgress));
-        localStorage.setItem("posisense_progress", JSON.stringify(newProgress));
+        return false;
       }
-      
-      return true;
+    } catch (err) {
+      return false;
     }
-    return false;
   };
 
+  // Register with backend
+  const register = async (username, email, password) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        return true;
+      } else {
+        return data.error || "Registration failed.";
+      }
+    } catch (err) {
+      return "Network error.";
+    }
+  };
   const logout = () => {
     setUser(null);
     localStorage.removeItem("posisense_user");
@@ -107,7 +109,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, progress, login, logout, saveSession }}>
+    <AuthContext.Provider value={{ user, progress, login, logout, register, saveSession }}>
       {children}
     </AuthContext.Provider>
   );
@@ -119,4 +121,4 @@ export function useAuth() {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
+}

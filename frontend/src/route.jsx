@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate, Outlet } from "react-router";
+import Register from "./pages/Register";
 import { useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
@@ -25,6 +26,10 @@ export const router = createBrowserRouter([
     {
         path: "/login",
         Component: Login,
+    },
+    {
+        path: "/register",
+        Component: Register,
     },
     {
         element: <ProtectedRoute />,
